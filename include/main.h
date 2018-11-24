@@ -2,11 +2,14 @@
 
 #include <stdint.h>
 
-bool read_rom(const char * rom_path);
+#define logger(fmt, ...)  nodelay(stdscr, FALSE); noraw(); nocbreak(); mvwprintw(log_window, 1, 1, fmt, ##__VA_ARGS__);get(); nodelay(stdscr, TRUE)
 
+
+bool read_rom(const char * rom_path);
 void read_next_command();
 void print_the_display();
 void print_registers();
+int get();
 
 typedef struct
 {
@@ -40,3 +43,6 @@ extern uint16_t l; // address register.
 extern uint16_t pc; // eip register.
 extern uint16_t stack[];
 extern unsigned int current_stack;
+extern WINDOW * log_window;
+extern WINDOW * display_window;
+extern WINDOW * registers_window;

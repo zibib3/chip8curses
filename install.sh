@@ -1,1 +1,1 @@
-gcc ./source/* -I ./include/ 
+gcc ./source/* -I ./include/  -lncurses -Wall

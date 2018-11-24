@@ -7,13 +7,29 @@
 #include <string.h>
 #include <stdlib.h>
 
+#include <ncurses.h>
+
 #include "main.h"
 
-
-#ifdef _DEBUG
-#include <stdio.h>
-#endif
-
+int get()
+{
+	box(stdscr, '|', '-');
+	box(display_window, '|', '=');
+	box(log_window, '|', '=');
+	box(registers_window, '|', '=');
+	wnoutrefresh(stdscr);
+	wnoutrefresh(display_window);
+	wnoutrefresh(log_window);
+	wnoutrefresh(registers_window);
+	doupdate();
+	int input = getch();
+	if (input == 'q')
+	{
+		endwin();
+		exit(0);
+	}
+	return input;
+}
 
 bool read_rom(const char * rom_path)
 {
@@ -25,7 +41,7 @@ bool read_rom(const char * rom_path)
 	memset(&memory, 0, sizeof(memory));
 	ssize_t rom_size = read(fd, memory.program, sizeof(memory.program));
 	#ifdef _DEBUG
-	printf("rom size is %u bytes.\n", rom_size);
+	// logger("rom size is %u bytes.\n", rom_size);
 	#endif
 	if (rom_size == 0)
 	{
@@ -37,24 +53,22 @@ bool read_rom(const char * rom_path)
 void print_the_display()
 {
 	const char fill = 'H';
-	const char blank = '_';
-	system("clear");
+	const char blank = ' ';
+
 	for (int y = 0; y < 32; ++y)
 	{
 		for (int x = 0; x < 64/8; ++x)
 		{
-			putchar((memory.screen[y][x] & 0b1) ? fill : blank );
-			putchar((memory.screen[y][x] & 0b10) ? fill : blank );
-			putchar((memory.screen[y][x] & 0b100) ? fill : blank );
-			putchar((memory.screen[y][x] & 0b1000) ? fill : blank );
-			putchar((memory.screen[y][x] & 0b10000) ? fill : blank );
-			putchar((memory.screen[y][x] & 0b100000) ? fill : blank );
-			putchar((memory.screen[y][x] & 0b1000000) ? fill : blank );
-			putchar((memory.screen[y][x] & 0b10000000) ? fill : blank );
+			mvwaddch(display_window, 1 + y, 1 + (x * 8), (memory.screen[y][x] & 0b1) ? fill : blank );
+			waddch(display_window, (memory.screen[y][x] & 0b10) ? fill : blank );
+			waddch(display_window, (memory.screen[y][x] & 0b100) ? fill : blank );
+			waddch(display_window, (memory.screen[y][x] & 0b1000) ? fill : blank );
+			waddch(display_window, (memory.screen[y][x] & 0b10000) ? fill : blank );
+			waddch(display_window, (memory.screen[y][x] & 0b100000) ? fill : blank );
+			waddch(display_window, (memory.screen[y][x] & 0b1000000) ? fill : blank );
+			waddch(display_window, (memory.screen[y][x] & 0b10000000) ? fill : blank );
 		}
-		putchar('\n');
 	}
-	putchar('\n');
 }
 
 void read_next_command()
@@ -65,14 +79,13 @@ void read_next_command()
 	case 0x0:
 		if (opcode.x == 0)
 		{
-			if (opcode.second = 0xEE)
+			if (opcode.second == 0xEE)
 			{
 				pc = stack[--current_stack];
 				break;
 			}
 		}
-		printf("unknown opcode: %#2x%2x\n", opcode.first, opcode.second);
-		getchar();
+		logger("unknown opcode: %#2x%2x\n", opcode.first, opcode.second);
 		break;
 	case 0x1:
 		pc = opcode.first - 0x10;
@@ -126,17 +139,11 @@ void read_next_command()
 		for (int y = 0; y < opcode.N; ++y)
 		{
 			unsigned char test = memory.screen[v[opcode.y]][v[opcode.x]];
-
 			memory.screen[v[opcode.y + y]][v[opcode.x] / 8] = ((char *) (&memory))[y + l];
-			printf("unknown opcode: %#2x%2x\n", opcode.first, opcode.second);
-			printf("changing line %u index %u at address %p.\nscreen is at: %p", v[opcode.y + y], v[opcode.x] / 8, &memory.screen[v[opcode.y + y]][v[opcode.x]], &memory.screen);
-			// memory.screen[v[opcode.y + y]][v[opcode.x] / 8] = 0xff;
-			
 			if (test != (test & memory.screen[v[opcode.y + y]][v[opcode.x] / 8]))
 			{
 				v[0xF] = 1;
 			}
-			// getchar();
 		}
 		break;
 	case 0xE:
@@ -144,8 +151,8 @@ void read_next_command()
 		{ // todo: keyboard.
 
 		// default:
-			// printf("unknown opcode: %#2x%2x\n", opcode.first, opcode.second);
-			// getchar();	
+			logger("unknown opcode: %#2x%2x\n", opcode.first, opcode.second);
+			get();	
 		}
 		break;
 	case 0xF:
@@ -159,13 +166,13 @@ void read_next_command()
 				l += v[opcode.x];
 				break;
 		default:
-			printf("unknown opcode: %#2x%2x\n", opcode.first, opcode.second);
-			getchar();	
+			logger("unknown opcode: %#2x%2x\n", opcode.first, opcode.second);
+			get();	
 		}
 		break;
 	default:
-		printf("unknown opcode: %#2x%2x\n", opcode.first, opcode.second);
-		getchar();
+		logger("unknown opcode: %#2x%2x\n", opcode.first, opcode.second);
+		get();
 	}
 	pc++;
 	pc++;
@@ -174,7 +181,7 @@ void read_next_command()
 
 void print_registers()
 {
-	printf("pc: %#X - %d\n", pc, pc-0x200);
-	printf("v0: %#X - %d\n", v[0], v[0]);
-	printf("v1: %#X - %d\n", v[1], v[1]);
+	mvwprintw(registers_window, 1, 1, "pc: %#X - %d\n", pc, pc-0x200);
+	mvwprintw(registers_window, 2, 1, "v0: %#X - %d\n", v[0], v[0]);
+	mvwprintw(registers_window, 3, 1, "v1: %#X - %d\n", v[1], v[1]);
 }

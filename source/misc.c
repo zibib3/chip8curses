@@ -70,8 +70,9 @@ bool read_rom(const char * rom_path)
 
 void redraw_game_screen()
 {
-	const char fill = 'H';
-	const char blank = ' ';
+	// const char fill = ACS_BLOCK | COLOR_PAIR(1);
+	const chtype fill = ACS_BLOCK | COLOR_PAIR(1);
+	const chtype blank = ' ';
 
 	for (int y = 0; y < 32; ++y)
 	{

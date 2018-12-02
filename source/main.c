@@ -119,7 +119,7 @@ int main(int argc, char const *argv[])
 		print_registers();
 		redraw_game_screen();
 		read_next_command();
-		nanosleep(&delay, NULL);
+		// nanosleep(&delay, NULL);
 		repaint();
 		pressed_key  = get();
 	}

@@ -159,14 +159,25 @@ void read_next_command()
 		logger("Vx += NN\n");
 		v[opcode.x] += opcode.second;
 		break;
-	/*case 0x8:
+	case 0x8:
 		switch (opcode.N)
 		{
-		case 0:
+		case 0x0:
 			logger("Vx=Vy\n");
 			v[opcode.x] = v[opcode.y];
 			break;
-		}*/
+		default:
+			error_logger("unknown opcode: %#2x%2x\n", opcode.first, opcode.second);
+			break;
+		}
+		break;
+	case 0x9:
+		logger("if(Vx!=Vy)\n");
+		if (v[opcode.x] != v[opcode.y])
+		{
+			pc +=2;
+		}
+		break;
 	case 0xA:
 		logger("I = NNN\n");
 		l = opcode.x;
@@ -194,7 +205,7 @@ void read_next_command()
 		{
 			logger("draw(Vx,Vy,N) character at %p-%x\n",&memory.start[y + l], memory.start[y + l]);
 			unsigned char test = memory.screen[v[opcode.y]][v[opcode.x]];
-			memory.screen[v[opcode.y + y]][(v[opcode.x] / 8)] ^= (memory.start[y + l]) >> v[opcode.x] % 8;
+			memory.screen[v[opcode.y]-y][(v[opcode.x] / 8)] ^= (memory.start[y + l]) >> v[opcode.x] % 8;
 			if (test != (test & memory.screen[v[opcode.y + y]][v[opcode.x] / 8]))
 			{
 				v[0xF] = 1;
@@ -226,16 +237,21 @@ void read_next_command()
 	case 0xF:
 		switch (opcode.second)
 		{
-			case 0x07: // todo: timer.
+			case 0x07:
 				logger("Vx = get_delay()\n");
 				v[opcode.x] = delay_timer;
 				break;
-			case 0x15: // todo: timer.
+			case 0x15:
 				logger("delay_timer(Vx)\n");
 				delay_timer = v[opcode.x];
 				break;
 			case 0x1E:
 				logger("I +=Vx\n");
+				v[0xf] = 0;
+				if (l + v[opcode.x] > 0xFFF)
+				{
+					v[0xf] = 1;
+				}
 				l += v[opcode.x];
 				break;
 			case 0x29:
@@ -249,7 +265,7 @@ void read_next_command()
 				memory.start[l+2] = (v[opcode.x] - (v[opcode.x] % 10)) % 1;
 				break;
 			case 0x65:
-				for (size_t i = 0; i < opcode.x; ++i)
+				for (size_t i = 0; i <= opcode.x; ++i)
 				{
 					v[i] = memory.start[l+(i*sizeof(v[0]))];
 				}

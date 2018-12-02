@@ -114,12 +114,15 @@ int main(int argc, char const *argv[])
 		{
 			delay_timer--;
 		}
-		repaint_memory();
-		redraw_game_screen();
-		print_registers();
+		if (v[0xf] == 1)
+		{
+			// error_logger("\n");
+		}
+		// repaint_memory();
+		// print_registers();
 		redraw_game_screen();
 		read_next_command();
-		// nanosleep(&delay, NULL);
+		nanosleep(&delay, NULL);
 		repaint();
 		pressed_key  = get();
 	}

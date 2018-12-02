@@ -6,13 +6,37 @@
 #include <stdint.h>
 #include <string.h>
 #include <stdlib.h>
-
+#include <stdarg.h>
 #include <ncurses.h>
 
 #include "main.h"
 
 int keyboard[] = {0x31, 0x32, 0x33, 0x34, 0x35, 0x36, 0x37, 0x38, 0x39, 0x30};
-//4567
+
+void logger(char * fmt, ...)
+{
+	#ifdef _DEBUG
+	va_list args;
+	va_start(args, fmt);
+	scroll(log_window);
+	mvwprintw(log_window, 8, 1, fmt, args);
+	#endif
+}
+
+void error_logger(char * fmt, ...)
+{
+	#ifdef _DEBUG
+	va_list args;
+	va_start(args, fmt);
+	nodelay(stdscr, FALSE);
+	scroll(log_window);
+	mvwprintw(log_window, 8, 1, fmt, args);
+	wrefresh(log_window);
+	get();
+	nodelay(stdscr, TRUE);
+	#endif
+}
+
 void repaint()
 {
 	box(stdscr, '|', '-');
@@ -204,9 +228,9 @@ void read_next_command()
 		for (int y = 0; y < opcode.N; ++y)
 		{
 			logger("draw(Vx,Vy,N) character at %p-%x\n",&memory.start[y + l], memory.start[y + l]);
-			unsigned char test = memory.screen[v[opcode.y]][v[opcode.x]];
-			memory.screen[v[opcode.y]-y][(v[opcode.x] / 8)] ^= (memory.start[y + l]) >> v[opcode.x] % 8;
-			if (test != (test & memory.screen[v[opcode.y + y]][v[opcode.x] / 8]))
+			unsigned char test = memory.screen[v[opcode.y]+y][v[opcode.x] / 8];
+			memory.screen[v[opcode.y]+y][(v[opcode.x] / 8)] ^= (memory.start[y + l]) >> v[opcode.x] % 8;
+			if (test != (test & memory.screen[v[opcode.y]+y][v[opcode.x] / 8]))
 			{
 				v[0xF] = 1;
 			}

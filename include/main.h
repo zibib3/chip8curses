@@ -2,7 +2,7 @@
 
 #include <stdint.h>
 
-#define error_logger(fmt, ...)  noraw(); nocbreak(); scroll(log_window); mvwprintw(log_window, 8, 1, fmt, ##__VA_ARGS__);get(); raw()
+#define error_logger(fmt, ...)  nodelay(stdscr, FALSE); scroll(log_window); mvwprintw(log_window, 8, 1, fmt, ##__VA_ARGS__);wrefresh(log_window); get(); nodelay(stdscr, TRUE)
 // #define error_logger(fmt, ...)  nodelay(stdscr, FALSE); noraw(); nocbreak(); wprintw(log_window,fmt, ##__VA_ARGS__);get(); nodelay(stdscr, TRUE); halfdelay(1)
 #define logger(fmt, ...)   scroll(log_window); mvwprintw(log_window, 8, 1, fmt, ##__VA_ARGS__)
 // #define logger(fmt, ...)   wprintw(log_window, fmt, ##__VA_ARGS__)
@@ -35,8 +35,8 @@ typedef struct
 		unsigned char second;	
 		struct
 		{
-			unsigned char y : 4;
 			unsigned char N : 4;
+			unsigned char y : 4;
 		};
 	};
 } opcode_t;

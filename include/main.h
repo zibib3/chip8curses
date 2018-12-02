@@ -1,12 +1,12 @@
-#define _DEBUG
+// #define _DEBUG
 
 #include <stdint.h>
 
-#define error_logger(fmt, ...)  nodelay(stdscr, FALSE); scroll(log_window); mvwprintw(log_window, 8, 1, fmt, ##__VA_ARGS__);wrefresh(log_window); get(); nodelay(stdscr, TRUE)
-// #define error_logger(fmt, ...)  nodelay(stdscr, FALSE); noraw(); nocbreak(); wprintw(log_window,fmt, ##__VA_ARGS__);get(); nodelay(stdscr, TRUE); halfdelay(1)
-#define logger(fmt, ...)   scroll(log_window); mvwprintw(log_window, 8, 1, fmt, ##__VA_ARGS__)
-// #define logger(fmt, ...)   wprintw(log_window, fmt, ##__VA_ARGS__)
+// #define error_logger(fmt, ...)  nodelay(stdscr, FALSE); scroll(log_window); mvwprintw(log_window, 8, 1, fmt, ##__VA_ARGS__);wrefresh(log_window); get(); nodelay(stdscr, TRUE)
+// #define logger(fmt, ...)   scroll(log_window); mvwprintw(log_window, 8, 1, fmt, ##__VA_ARGS__)
 
+void logger(char * fmt, ...);
+void error_logger(char * fmt, ...);
 
 bool read_rom(const char * rom_path);
 void read_next_command();

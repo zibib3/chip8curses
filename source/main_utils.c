@@ -1,3 +1,5 @@
+#define _GNU_SOURCE
+#include <sched.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
@@ -8,28 +10,42 @@
 #include <stdlib.h>
 #include <stdarg.h>
 #include <ncurses.h>
+#include <signal.h>
 
 #include "main.h"
 
-int get()
+int key_logger(void * running)
 {
-	int input = getch();
-	switch (input)
-	{
-		case 'q':
-			endwin();
-			exit(0);
-		break;
-		case '\n':
-			nodelay(stdscr, TRUE);
-		break;
-		case '\'':
-			nodelay(stdscr, FALSE);
-		break;
-		
+	// nodelay(stdscr, TRUE);
+	halfdelay(10); // half delay is cancelling raw, so ctrl + c will terminate the program.
+	int i;
+	logger("character is %p\n", pressed_key);
+	while (true)
+	{i++;
+		// timeout(-1);
+		// nodelay(stdscr, FALSE);
+		// (*(int *)input) = getch();
+		pressed_key = getch();
 
+		switch (pressed_key)
+		{
+			case 'q':
+				return 0;
+			break;
+			case '\n':
+				// nodelay(stdscr, TRUE);
+				halfdelay(10); // half delay is cancelling raw, so ctrl + c will terminate the program.
+				*(bool *)running = true;
+			break;
+			case '\'':
+				*(bool *)running = false;
+				// nodelay(stdscr, FALSE);
+				raw();
+			break;
+			
+
+		}
 	}
-	return input;
 }
 
 bool read_rom(const char * rom_path)
@@ -50,6 +66,23 @@ bool read_rom(const char * rom_path)
 	}
 	return true;
 }
+
+bool start_key_logger(bool * running)
+{
+	const size_t STACK_SIZE = 0x1000;
+
+	char * stack = malloc(STACK_SIZE);
+	if (stack == NULL)
+	{
+		return false;
+	}
+	if  (clone(key_logger, stack + STACK_SIZE-1, CLONE_VM | CLONE_FILES | SIGCHLD, running) == -1)
+	{
+		return false;	
+	}
+	return true;
+}
+
 
 void redraw_game_screen()
 {

@@ -2,15 +2,12 @@
 
 #ifndef __MAIN_H__
 #define __MAIN_H__
+#include <ncurses.h>
 #include "log.h"
 #include "types.h"
 #include "interpreter.h"
 
-bool read_rom(const char * rom_path);
-void redraw_game_screen();
-void print_registers();
-void repaint();
-int get();
+// void repaint();
 
 extern const int keyboard[];
 

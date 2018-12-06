@@ -133,7 +133,7 @@ void execute_opcode()
 			logger("if(key()==Vx)\tVx=%#X\tpressed key=%#X\n", keyboard[v[opcode.x]], pressed_key);
 			if (keyboard[v[opcode.x]] == pressed_key)
 			{
-				error_logger("key is pressed.\n");
+				logger("key is pressed.\n");
 				pc +=2;
 			}
 			break;

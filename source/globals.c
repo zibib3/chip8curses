@@ -7,7 +7,7 @@
 
 #include "main.h"
 
-int pressed_key = 0;
+int pressed_key = ERR;
 memory_t memory = {0};
 unsigned char v[16] = {0}; // registers
 unsigned char delay_timer = 0;
@@ -20,4 +20,7 @@ WINDOW * memory_window = NULL;
 WINDOW * display_window = NULL;
 WINDOW * registers_window = NULL;
 
-const int keyboard[] = {0x31, 0x32, 0x33, 0x34, 0x35, 0x36, 0x37, 0x38, 0x39, 0x30};
+// const int keyboard[] = {0x31, 0x32, 0x33, 0x34, 0x35, 0x36, 0x37, 0x38, 0x39, 0x30};
+const int keyboard[] = {'w', 'e', 'r', 't',
+						's', 'd', 'f', 'g',
+						'x', 'c', 'v', 'b'};

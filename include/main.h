@@ -1,4 +1,4 @@
-#define _DEBUG
+// #define _DEBUG
 
 #ifndef __MAIN_H__
 #define __MAIN_H__

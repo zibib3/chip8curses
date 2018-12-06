@@ -5,6 +5,7 @@
 #include <unistd.h>
 
 #include "main.h"
+#include "misc.h"
 
 
 #define logger(...) __logger(log_window, ##__VA_ARGS__)
@@ -28,7 +29,7 @@ static inline void __error_logger(WINDOW * log_window, char * fmt, ...)
 	scroll(log_window);
 	mvwprintw(log_window, 8, 1, fmt, args);
 	wrefresh(log_window);
-	getch();
+	pause_execution();
 	// nodelay(stdscr, TRUE);
 	#endif
 }

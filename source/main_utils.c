@@ -13,8 +13,9 @@
 #include <signal.h>
 
 #include "main.h"
+#include "misc.h"
 
-int key_logger(void * running)
+static int key_logger(void * foo)
 {
 	// nodelay(stdscr, TRUE);
 	halfdelay(10); // half delay is cancelling raw, so ctrl + c will terminate the program.
@@ -35,10 +36,10 @@ int key_logger(void * running)
 			case '\n':
 				// nodelay(stdscr, TRUE);
 				halfdelay(10); // half delay is cancelling raw, so ctrl + c will terminate the program.
-				*(bool *)running = true;
+				pause_execution();
 			break;
 			case '\'':
-				*(bool *)running = false;
+				resume_execution();
 				// nodelay(stdscr, FALSE);
 				raw();
 			break;
@@ -67,7 +68,7 @@ bool read_rom(const char * rom_path)
 	return true;
 }
 
-bool start_key_logger(bool * running)
+bool start_key_logger()
 {
 	const size_t STACK_SIZE = 0x1000;
 
@@ -76,13 +77,12 @@ bool start_key_logger(bool * running)
 	{
 		return false;
 	}
-	if  (clone(key_logger, stack + STACK_SIZE-1, CLONE_VM | CLONE_FILES | SIGCHLD, running) == -1)
+	if  (clone(key_logger, stack + STACK_SIZE-1, CLONE_VM | CLONE_FILES | SIGCHLD, NULL) == -1)
 	{
 		return false;	
 	}
 	return true;
 }
-
 
 void redraw_game_screen()
 {

@@ -3,7 +3,6 @@
 #include <ncurses.h>
 #include "main.h"
 
-
 void execute_opcode()
 {
 	opcode_t opcode = *((opcode_t *)(&(memory.start[pc])));
@@ -80,6 +79,10 @@ void execute_opcode()
 			logger("Vx=Vy\n");
 			v[opcode.x] = v[opcode.y];
 			break;
+		case 0x2:
+			logger("Vx&=Vy\n");
+			v[opcode.x] &= v[opcode.y];
+			break;
 		default:
 			error_logger("unknown opcode: %#2x%2x\n", opcode.first, opcode.second);
 			break;
@@ -119,8 +122,14 @@ void execute_opcode()
 		{
 			logger("draw(Vx,Vy,N) character at %p-%x\n",&memory.start[y + l], memory.start[y + l]);
 			unsigned char test = memory.screen[v[opcode.y]+y][v[opcode.x] / 8];
+			unsigned char test_2 = memory.screen[v[opcode.y]+y][v[opcode.x] / 8 + 1];
 			memory.screen[v[opcode.y]+y][(v[opcode.x] / 8)] ^= (memory.start[y + l]) >> (v[opcode.x] % 8);
+			memory.screen[v[opcode.y]+y][(v[opcode.x] / 8) + 1] ^= (memory.start[y + l]) << (8 - (v[opcode.x] % 8));
 			if (test != (test & memory.screen[v[opcode.y]+y][v[opcode.x] / 8]))
+			{
+				v[0xF] = 1;
+			}
+			if (test_2 != (test_2 & memory.screen[v[opcode.y]+y][v[opcode.x] / 8 + 1]))
 			{
 				v[0xF] = 1;
 			}
@@ -155,6 +164,25 @@ void execute_opcode()
 				logger("Vx = get_delay()\n");
 				v[opcode.x] = delay_timer;
 				break;
+			case 0x0A:
+				logger("Vx = get_key()\n");
+				bool is_key_pressed = false;
+				while (!is_key_pressed)
+				{
+					while (pressed_key == ERR)	{}
+					// for (size_t i; i < sizeof(keyboard); i++)
+					for (size_t i; i < 16; i++)
+					{
+						if (keyboard[i] == pressed_key)
+						{
+							v[opcode.x] = i;
+							is_key_pressed = true;
+							break;
+						}
+					}
+				}
+				error_logger("\n");
+				break;
 			case 0x15:
 				logger("delay_timer(Vx)\n");
 				delay_timer = v[opcode.x];
@@ -178,7 +206,15 @@ void execute_opcode()
 				memory.start[l+1] = (v[opcode.x] - (v[opcode.x] % 100)) % 10;
 				memory.start[l+2] = (v[opcode.x] - (v[opcode.x] % 10)) % 1;
 				break;
+			case 0x55:
+				logger("reg_dump(Vx,&I)\n");
+				for (size_t i = 0; i <= opcode.x; ++i)
+				{
+					memory.start[l+(i*sizeof(v[0]))] = v[i];
+				}
+				break;
 			case 0x65:
+				logger("reg_load(Vx,&I)\n");
 				for (size_t i = 0; i <= opcode.x; ++i)
 				{
 					v[i] = memory.start[l+(i*sizeof(v[0]))];

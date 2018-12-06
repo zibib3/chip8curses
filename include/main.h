@@ -15,6 +15,7 @@ extern int pressed_key;
 extern memory_t memory;
 extern unsigned char v[];
 extern unsigned char delay_timer;
+extern unsigned char sound_timer;
 extern uint16_t l; // address register.
 extern uint16_t pc; // eip register.
 extern uint16_t stack[];

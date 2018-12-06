@@ -73,6 +73,10 @@ int main(int argc, char const *argv[])
 		{
 			delay_timer--;
 		}
+		if (sound_timer > 0)
+		{
+			sound_timer--;
+		}
 		refresh_memory_window();
 		print_registers();
 		redraw_game_screen();

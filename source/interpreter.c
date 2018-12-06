@@ -14,7 +14,13 @@ void execute_opcode()
 		{
 			if (opcode.second == 0xEE)
 			{
-				logger("return\n");
+				logger("return. current_stack is %lu\n", current_stack);
+				#ifdef _DEBUG
+				if (current_stack == 0)
+				{
+					error_logger("return from outer space.\n");
+				}
+				#endif
 				pc = stack[--current_stack];
 				break;
 			}
@@ -79,9 +85,43 @@ void execute_opcode()
 			logger("Vx=Vy\n");
 			v[opcode.x] = v[opcode.y];
 			break;
+		case 0x1:
+			logger("Vx|=Vy\n");
+			v[opcode.x] |= v[opcode.y];
+			break;
 		case 0x2:
 			logger("Vx&=Vy\n");
 			v[opcode.x] &= v[opcode.y];
+			break;
+		case 0x3:
+			logger("Vx^=Vy\n");
+			v[opcode.x] ^= v[opcode.y];
+			break;
+		case 0x4:
+			logger("Vx+=Vy\n");
+			v[opcode.x] += v[opcode.y];
+			break;
+		case 0x5:
+			logger("Vx-=Vy\n");
+			v[opcode.x] -= v[opcode.y];
+			break;
+		case 0x6:
+			logger("Vx>>=1\n");
+			v[0xF] = 1 & v[opcode.x];
+			v[opcode.x] >>= 1;
+			break;
+		case 0x7:
+			logger("Vx=Vy-Vx\n");
+			if (v[opcode.x] > v[opcode.y])
+				v[0xF] = 0;
+			else
+				v[0xF] = 1;
+			v[opcode.x] = v[opcode.y] - v[opcode.x];
+			break;
+		case 0xE:
+			logger("Vx<<=1\n");
+			v[0xF] = 0b10000000 & v[opcode.x];
+			v[opcode.x] <<= 1;
 			break;
 		default:
 			error_logger("unknown opcode: %#2x%2x\n", opcode.first, opcode.second);
@@ -137,7 +177,7 @@ void execute_opcode()
 		break;
 	case 0xE:
 		switch (opcode.second)
-		{ // todo: keyboard.
+		{ 
 		case 0x9E:
 			logger("if(key()==Vx)\tVx=%#X\tpressed key=%#X\n", keyboard[v[opcode.x]], pressed_key);
 			if (keyboard[v[opcode.x]] == pressed_key)
@@ -165,14 +205,13 @@ void execute_opcode()
 				v[opcode.x] = delay_timer;
 				break;
 			case 0x0A:
-				logger("Vx = get_key()\n");
+				logger("Vx = get_key()\n"); // todo: keyboard.
 				bool is_key_pressed = false;
-				while (!is_key_pressed)
+				while (is_key_pressed == false)
 				{
-					while (pressed_key == ERR)	{}
-					// for (size_t i; i < sizeof(keyboard); i++)
-					for (size_t i; i < 16; i++)
+					for (size_t i = 0; i < 16; i++)
 					{
+						// error_logger("keyboard[i] is %X\tpressed_key is %X\n", keyboard[i], pressed_key);
 						if (keyboard[i] == pressed_key)
 						{
 							v[opcode.x] = i;
@@ -181,11 +220,15 @@ void execute_opcode()
 						}
 					}
 				}
-				error_logger("\n");
+				// error_logger("Key is pressed \n");
 				break;
 			case 0x15:
 				logger("delay_timer(Vx)\n");
 				delay_timer = v[opcode.x];
+				break;
+			case 0x18:
+				logger("sound_timer(Vx)\n");
+				sound_timer = v[opcode.x];
 				break;
 			case 0x1E:
 				logger("I +=Vx\n");

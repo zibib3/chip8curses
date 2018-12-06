@@ -25,10 +25,6 @@ int main(int argc, char const *argv[])
 		retval = RETURN_VALUE_INVALID_ARGUMENTS;
 		goto exit;
 	}
-	for (size_t i = 0; i < sizeof(memory.screen); ++i)
-	{
-		((char *)(memory.screen))[i] = i;
-	}
 	if (!read_rom(argv[1]))
 	{
 		retval = RETURN_VALUE_INVALID_ARGUMENTS;
@@ -41,6 +37,7 @@ int main(int argc, char const *argv[])
 		retval = RETURN_VALUE_CANT_REGISTER_WINDOW;
 		goto exit;
 	}
+#ifdef _DEBUG
 	log_window = newwin(10,66,37,5);
 	if (!register_window(log_window))
 	{
@@ -59,6 +56,7 @@ int main(int argc, char const *argv[])
 		retval = RETURN_VALUE_CANT_REGISTER_WINDOW;
 		goto exit;
 	}
+#endif
 
 	raw();
 	keypad(stdscr, TRUE);

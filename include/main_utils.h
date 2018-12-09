@@ -4,7 +4,7 @@
 #include <time.h>
 
 bool read_rom(const char * rom_path);
-bool start_key_logger(struct timespec * delay);
-void redraw_game_screen();
-void print_registers();
+bool start_input_listener(struct timespec * delay);
+void refresh_game_screen_window();
+void refresh_registers_window();
 #endif

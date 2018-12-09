@@ -1,4 +1,4 @@
-# chip8curses
+# chip8curses - Version 1.0
 
 keybinding:
 	q:	Quit the emulator.
@@ -21,7 +21,7 @@ Run instruction:
 
 My next targets are:
 1) Write a documentation on the code.
-2) I have a cool idea for  upgrade for the display.
+2) I have a cool idea for  upgrade for the game_screen.
 3) Add cross-platform support.
 4) Add support for graphical UI
 5) Currently the emulator is only interpreter. It will be fun to make a recompiler.

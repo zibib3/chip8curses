@@ -18,10 +18,9 @@ uint16_t stack[16] = {0};
 unsigned int current_stack = 0;
 WINDOW * log_window = NULL;
 WINDOW * memory_window = NULL;
-WINDOW * display_window = NULL;
+WINDOW * game_screen_window = NULL;
 WINDOW * registers_window = NULL;
 
-// const int keyboard[] = {0x31, 0x32, 0x33, 0x34, 0x35, 0x36, 0x37, 0x38, 0x39, 0x30};
 const int keyboard[] = {'2', '3', '4', '5',
 						'w', 'e', 'r', 't',
 						's', 'd', 'f', 'g',

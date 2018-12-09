@@ -1,8 +1,12 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ncurses.h>
+
 #include "main.h"
 
+/*
+ * @brief Interpret the opcode at memory location pc, and increase pc by 2.
+ */
 void execute_opcode()
 {
 	opcode_t opcode = *((opcode_t *)(&(memory.start[pc])));

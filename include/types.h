@@ -1,5 +1,6 @@
 #ifndef __TYPES_H__
 #define __TYPES_H__
+#include <ncurses.h>
 
 typedef struct node_s
 {
@@ -24,7 +25,7 @@ typedef struct
 	};
 	union
 	{
-		unsigned char second;	
+		unsigned char NN;	
 		struct
 		{
 			unsigned char N : 4;

@@ -6,13 +6,14 @@
 void execute_opcode()
 {
 	opcode_t opcode = *((opcode_t *)(&(memory.start[pc])));
-	logger("x is %X y is %X N is %X NN is %X\n", opcode.x, opcode.y, opcode.N, opcode.second);
+	logger("x is %X y is %X N is %X NN is %X\n", opcode.x, opcode.y, opcode.N, opcode.NN);
+	int misc;
 	switch (opcode.first >> 4)
 	{
 	case 0x0:
 		if (opcode.x == 0)
 		{
-			if (opcode.second == 0xEE)
+			if (opcode.NN == 0xEE)
 			{
 				logger("return. current_stack is %lu\n", current_stack);
 				#ifdef _DEBUG
@@ -24,21 +25,27 @@ void execute_opcode()
 				pc = stack[--current_stack];
 				break;
 			}
-			if (opcode.second == 0xE0)
+			if (opcode.NN == 0xE0)
 			{
 				logger("cls\n");
 				memset(memory.screen, 0, sizeof(memory.screen));
 				break;
 			}
-			logger("call 1802. unsupported. ignoring\n");
+			error_logger("call 1802. unsupported. ignoring\n");
 		}
-		error_logger("unknown opcode: %#2x%2x\n", opcode.first, opcode.second);
+		error_logger("unknown opcode: %#2x%2x\n", opcode.first, opcode.NN);
 		break;
 	case 0x1:
-		logger("goto\n");
+		logger("goto from %#2x ", pc);
+		misc = pc;
 		pc = opcode.x;
 		pc <<= 8;
-		pc += opcode.second;
+		pc += opcode.NN;
+		logger("to %#2x\n", pc);
+		if (misc == pc)
+		{
+			logger("Program is ended.\n");
+		}
 		pc -= 2;
 		break;
 	case 0x2:
@@ -46,19 +53,19 @@ void execute_opcode()
 		stack[current_stack++] = pc;
 		pc = opcode.x;
 		pc <<= 8;
-		pc += opcode.second;
+		pc += opcode.NN;
 		pc -= 2;
 		break;
 	case 0x3:
 		logger("skip if(Vx==NN)\n");
-		if (v[opcode.x] == opcode.second)
+		if (v[opcode.x] == opcode.NN)
 		{
 			pc += 2;
 		}
 		break;
 	case 0x4:
 		logger("skip if(Vx!=NN)\n");
-		if (v[opcode.x] != opcode.second)
+		if (v[opcode.x] != opcode.NN)
 		{
 			pc += 2;
 		}
@@ -72,11 +79,11 @@ void execute_opcode()
 		break;
 	case 0x6:
 		logger("Vx = NN \n");
-		v[opcode.x] = opcode.second;
+		v[opcode.x] = opcode.NN;
 		break;
 	case 0x7:
 		logger("Vx += NN\n");
-		v[opcode.x] += opcode.second;
+		v[opcode.x] += opcode.NN;
 		break;
 	case 0x8:
 		switch (opcode.N)
@@ -124,7 +131,7 @@ void execute_opcode()
 			v[opcode.x] <<= 1;
 			break;
 		default:
-			error_logger("unknown opcode: %#2x%2x\n", opcode.first, opcode.second);
+			error_logger("unknown opcode: %#2x%2x\n", opcode.first, opcode.NN);
 			break;
 		}
 		break;
@@ -139,21 +146,19 @@ void execute_opcode()
 		logger("I = NNN\n");
 		l = opcode.x;
 		l <<= 8;
-		l += opcode.second;
+		l += opcode.NN;
 		break;
 	case 0xB:
 		logger("jmp $+NNN\n");
 		pc = opcode.x;
 		pc <<= 8;
-		pc += opcode.second;
+		pc += opcode.NN;
 		pc += v[0];
 		pc -= 2;
 		break;
 	case 0xC:
-		logger("Vx=rand()&NN - %X\n", rand() % 256);
-		logger("v[opcode.x] - %X\n", v[opcode.x]);
-		v[opcode.x] = (rand() % 256) & opcode.N;
-		logger("v[opcode.x] - %X\n", v[opcode.x]);
+		logger("Vx=rand()&NN\n");
+		v[opcode.x] = (rand() % 256) & opcode.NN;
 		break;
 	case 0xD:
 		v[0xF] = 0;
@@ -176,7 +181,7 @@ void execute_opcode()
 		}
 		break;
 	case 0xE:
-		switch (opcode.second)
+		switch (opcode.NN)
 		{ 
 		case 0x9E:
 			logger("if(key()==Vx)\tVx=%#X\tpressed key=%#X\n", keyboard[v[opcode.x]], pressed_key);
@@ -194,24 +199,25 @@ void execute_opcode()
 			}
 			break;
 		default:
-			error_logger("unknown opcode: %#2x%2x\n", opcode.first, opcode.second);
+			error_logger("unknown opcode: %#2x%2x\n", opcode.first, opcode.NN);
 		}
 		break;
 	case 0xF:
-		switch (opcode.second)
+		switch (opcode.NN)
 		{
 			case 0x07:
 				logger("Vx = get_delay()\n");
 				v[opcode.x] = delay_timer;
 				break;
 			case 0x0A:
-				logger("Vx = get_key()\n"); // todo: keyboard.
+				logger("Vx = get_key()\n");
+				wrefresh(log_window); // We are refreshing out log window because we are entering into a loop that may consume a lot of time.
 				bool is_key_pressed = false;
+
 				while (is_key_pressed == false)
 				{
 					for (size_t i = 0; i < 16; i++)
 					{
-						// error_logger("keyboard[i] is %X\tpressed_key is %X\n", keyboard[i], pressed_key);
 						if (keyboard[i] == pressed_key)
 						{
 							v[opcode.x] = i;
@@ -220,7 +226,6 @@ void execute_opcode()
 						}
 					}
 				}
-				// error_logger("Key is pressed \n");
 				break;
 			case 0x15:
 				logger("delay_timer(Vx)\n");
@@ -265,11 +270,11 @@ void execute_opcode()
 				break;
 
 		default:
-			error_logger("unknown opcode: %#2x%2x\n", opcode.first, opcode.second);
+			error_logger("unknown opcode: %#2x%2x\n", opcode.first, opcode.NN);
 		}
 		break;
 	default:
-		error_logger("unknown opcode: %#2x%2x\n", opcode.first, opcode.second);
+		error_logger("unknown opcode: %#2x%2x\n", opcode.first, opcode.NN);
 	}
 	pc+=2;
 }

@@ -1,5 +1,7 @@
 #include <stdbool.h>
-
+#include <unistd.h>
+#include <stdlib.h>
+#include "types.h"
 static bool running = true;
 
 bool is_running()
@@ -15,4 +17,10 @@ void pause_execution()
 void resume_execution()
 {
 	running = true;
+}
+
+void quit(return_codes_t retval)
+{
+	endwin();
+	_exit(retval);
 }

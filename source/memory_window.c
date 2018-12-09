@@ -14,6 +14,7 @@ chtype get_colored_memory(size_t address)
 			wattrset(memory_window, COLOR_PAIR(0));
 		}
 	}
+	return memory.start[address];
 	return memory.program[address];
 }
 
@@ -27,7 +28,7 @@ void refresh_memory_window()
 																															get_colored_memory(i*16+4), get_colored_memory(i*16+5), get_colored_memory(i*16+6), get_colored_memory(i*16+7),
 																															get_colored_memory(i*16+8), get_colored_memory(i*16+9), get_colored_memory(i*16+10), get_colored_memory(i*16+11),
 																															get_colored_memory(i*16+12), get_colored_memory(i*16+13), get_colored_memory(i*16+14), get_colored_memory(i*16+15));*/
-	mvwprintw(memory_window, 1 + i, 1, "0x%X\t", (i*16)+sizeof(memory.start));
+	mvwprintw(memory_window, 1 + i, 1, "0x%X\t", (i*16)/*+sizeof(memory.start)*/);
 	wprintw(memory_window, "%02X", get_colored_memory(i*16));
 	wprintw(memory_window, "%02X ", get_colored_memory(i*16+1));
 	wprintw(memory_window, "%02X", get_colored_memory(i*16+2));

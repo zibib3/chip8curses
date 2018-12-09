@@ -11,18 +11,21 @@
 #include <stdarg.h>
 #include <ncurses.h>
 #include <signal.h>
+#include <time.h>
 
 #include "main.h"
+#include "interpreter.h"
 #include "misc.h"
 
-static int key_logger(void * foo)
+static int key_logger(void * delay)
 {
 	// nodelay(stdscr, TRUE);
-	halfdelay(10); // half delay is cancelling raw, so ctrl + c will terminate the program.
-	int i;
+	// int delay_time_tenth = ((struct timespec *) delay) -> tv_nsec = delay_time_tenth / (100000000);
+
+	halfdelay(1); // half delay is cancelling raw, so ctrl + c will terminate the program.
 	logger("character is %p\n", pressed_key);
 	while (true)
-	{i++;
+	{
 		// timeout(-1);
 		// nodelay(stdscr, FALSE);
 		// (*(int *)input) = getch();
@@ -31,22 +34,46 @@ static int key_logger(void * foo)
 		switch (pressed_key)
 		{
 			case 'q':
-				return 0;
+				quit(RETURN_VALUE_SUCCESS);
 			break;
 			case '\n':
+				if (is_running())
+				{
 				// nodelay(stdscr, TRUE);
-				halfdelay(10); // half delay is cancelling raw, so ctrl + c will terminate the program.
+				// halfdelay(1); // half delay is cancelling raw, so ctrl + c will terminate the program.
 				pause_execution();
+				}
+				else
+				{
+					resume_execution();
+					// nodelay(stdscr, FALSE);
+					// raw();
+				}
 			break;
-			case '\'':
-				resume_execution();
-				// nodelay(stdscr, FALSE);
-				raw();
+			case 0x10D: // <F5>
+				execute_opcode();
 			break;
-			
-
+			case 0x10E: // <F6>
+				if (((struct timespec *) delay) -> tv_nsec - 1000000 >= 0)
+				{
+					// delay_time_tenth += 1;
+					// ((struct timespec *) delay) -> tv_nsec = delay_time_tenth * (100000000);
+					((struct timespec *) delay) -> tv_nsec -= 1000000;
+					logger("setting delay to %ld nano of second.\n", ((struct timespec *) delay) -> tv_nsec);
+				}
+			break;
+			case 0x10F: // <F7>
+				if (((struct timespec *) delay) -> tv_nsec < 1000000000 - 1000000)
+				{
+					// delay_time_tenth -= 1;
+					// ((struct timespec *) delay) -> tv_nsec = delay_time_tenth * (100000000);
+					((struct timespec *) delay) -> tv_nsec += 1000000;
+					logger("setting delay to %ld nano of second.\n", ((struct timespec *) delay) -> tv_nsec);
+				}
+			break;
 		}
 	}
+	return -1;
 }
 
 bool read_rom(const char * rom_path)
@@ -56,7 +83,7 @@ bool read_rom(const char * rom_path)
 	{
 		return false;
 	}
-	memset(&memory, 0, sizeof(memory));
+	memset(&memory.program, 0, sizeof(memory.program));
 	ssize_t rom_size = read(fd, memory.program, sizeof(memory.program));
 	#ifdef _DEBUG
 	// error_logger("rom size is %u bytes.\n", rom_size);
@@ -68,7 +95,7 @@ bool read_rom(const char * rom_path)
 	return true;
 }
 
-bool start_key_logger()
+bool start_key_logger(struct timespec * delay)
 {
 	const size_t STACK_SIZE = 0x1000;
 
@@ -77,7 +104,7 @@ bool start_key_logger()
 	{
 		return false;
 	}
-	if  (clone(key_logger, stack + STACK_SIZE-1, CLONE_VM | CLONE_FILES | SIGCHLD, NULL) == -1)
+	if  (clone(key_logger, stack + STACK_SIZE-1, CLONE_VM | CLONE_FILES | SIGQUIT, delay) == -1)
 	{
 		return false;	
 	}
@@ -123,7 +150,9 @@ void print_registers()
 	mvwprintw(registers_window, 6, 30, "vd: %#X - %d\n", v[0xd], v[0xd]);
 	mvwprintw(registers_window, 7, 30, "ve: %#X - %d\n", v[0xe], v[0xe]);
 	mvwprintw(registers_window, 8, 30, "vf: %#X - %d\n", v[0xf], v[0xf]);
-	mvwprintw(registers_window, 1, 50, "pc: %#X - %#02X%02X\n", pc, ((opcode_t *)(&(memory.start[pc])))->first, ((opcode_t *)(&(memory.start[pc])))->second);
+	mvwprintw(registers_window, 1, 50, "pc: %#X - %#02X%02X\n", pc, ((opcode_t *)(&(memory.start[pc])))->first, ((opcode_t *)(&(memory.start[pc])))->NN);
 	mvwprintw(registers_window, 2, 50, "keyboard: %X\n", pressed_key);
 	mvwprintw(registers_window, 3, 50, "l: %X\n", l);
+	mvwprintw(registers_window, 4, 50, "delay_timer: %d\n", delay_timer);
+	mvwprintw(registers_window, 5, 50, "sound_timer: %d\n", sound_timer);
 }

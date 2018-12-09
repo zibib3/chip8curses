@@ -1,1 +1,1 @@
-gcc ./source/*.c -I ./include/  -lncurses -Wall
+gcc ./source/*.c -I ./include/  -lncurses -Wall -o ./bin/chip8curses

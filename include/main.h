@@ -7,10 +7,8 @@
 #include "types.h"
 #include "interpreter.h"
 
-// void repaint();
 
 extern const int keyboard[];
-
 extern int pressed_key;
 extern memory_t memory;
 extern unsigned char v[];
@@ -22,7 +20,7 @@ extern uint16_t stack[];
 extern unsigned int current_stack;
 extern WINDOW * log_window;
 extern WINDOW * memory_window;
-extern WINDOW * display_window;
+extern WINDOW * game_screen_window;
 extern WINDOW * registers_window;
 
 #endif

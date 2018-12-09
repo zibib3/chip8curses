@@ -1,5 +1,11 @@
 # chip8curses - Version 1.0
 
+Description:
+	This is an emulator for the chip8 architechture, that run in terminal, that mean that
+	you can play via ssh.
+	This is fun.
+	Currently I tested it only on linux.
+
 keybinding:
 	q:	Quit the emulator.
 	ENTER:	Pause / Resume game.
@@ -7,7 +13,7 @@ keybinding:
 	2,3,4,5,
 	w,e,r,t,
 	s,d,f,g,
-	x,c,v,b:	the keyboard of the chip-80.
+	x,c,v,b:	the keyboard of the chip-8.
 	<F6>: Make the emulator slower.
 	<F7>: Make the emulator faster. (by default the emulator is running on full speed.)
 If the keyboard is not working, please make sure that you are typing lower-case english characters.
